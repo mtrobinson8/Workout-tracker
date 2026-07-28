@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Workout">
+<title>Workout</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #f7f6f3; --surface: #ffffff; --surface2: #f2f1ee;
+    --border: rgba(0,0,0,0.09); --border-strong: rgba(0,0,0,0.15);
+    --text: #1a1a18; --text2: #5a5a56; --text3: #9a9a94;
+    --radius: 14px; --radius-sm: 9px;
+    --blue-bg:#e8f1fc; --blue-br:#3b82d4; --blue-tx:#1a4a8a;
+    --green-bg:#e4f4ed; --green-br:#1e9e72; --green-tx:#0a5038;
+    --amber-bg:#fef0d6; --amber-br:#c07a10; --amber-tx:#6b4008;
+    --purple-bg:#eeedfe; --purple-br:#7f77dd; --purple-tx:#3c3489;
+    --accent:#2563c4;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg:#141413; --surface:#1e1e1c; --surface2:#252522;
+      --border:rgba(255,255,255,0.08); --border-strong:rgba(255,255,255,0.14);
+      --text:#f0efe8; --text2:#a0a09a; --text3:#68685e;
+      --blue-bg:#162440; --blue-br:#3b82d4; --blue-tx:#93bbf7;
+      --green-bg:#0d2e20; --green-br:#1e9e72; --green-tx:#5dceab;
+      --amber-bg:#2a1e08; --amber-br:#c07a10; --amber-tx:#f5c060;
+      --purple-bg:#1e1c40; --purple-br:#7f77dd; --purple-tx:#b8b3f5;
+      --accent:#5b99f5;
+    }
+  }
+  html,body { height:100%; background:var(--bg); color:var(--text); font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',sans-serif; -webkit-font-smoothing:antialiased; }
+  .app { max-width:480px; margin:0 auto; min-height:100vh; display:flex; flex-direction:column; }
+
+  /* Header */
+  .header { padding:52px 20px 14px; position:sticky; top:0; background:var(--bg); z-index:10; border-bottom:0.5px solid var(--border); }
+  .header h1 { font-size:22px; font-weight:700; letter-spacing:-0.4px; }
+  .header-sub { font-size:13px; color:var(--text2); margin-top:2px; }
+  .seg { display:flex; background:var(--surface2); border-radius:10px; padding:3px; margin-top:12px; }
+  .seg button { flex:1; padding:7px 0; border:none; background:transparent; font-size:13px; font-weight:500; color:var(--text2); border-radius:8px; cursor:pointer; transition:background 0.15s,color 0.15s; -webkit-tap-highlight-color:transparent; font-family:inherit; }
+  .seg button.active { background:var(--surface); color:var(--text); box-shadow:0 1px 3px rgba(0,0,0,0.12); }
+
+  /* Content */
+  .content { padding:14px 20px 140px; flex:1; }
+
+  /* Session card */
+  .session { background:var(--surface); border-radius:var(--radius); border:0.5px solid var(--border); margin-bottom:12px; overflow:hidden; }
+  .session-head { display:flex; align-items:center; justify-content:space-between; padding:14px 16px; cursor:pointer; -webkit-tap-highlight-color:transparent; user-select:none; }
+  .shl { display:flex; align-items:center; gap:10px; }
+  .dot { width:11px; height:11px; border-radius:50%; flex-shrink:0; }
+  .s-title { font-size:15px; font-weight:600; }
+  .s-focus { font-size:12px; color:var(--text2); margin-top:1px; }
+  .shr { display:flex; align-items:center; gap:8px; }
+  .est { font-size:12px; color:var(--text3); }
+  .chev { font-size:16px; color:var(--text3); transition:transform 0.2s; display:inline-block; }
+  .chev.open { transform:rotate(180deg); }
+  .session-body { border-top:0.5px solid var(--border); }
+
+  /* Progress */
+  .prog-wrap { padding:10px 16px 6px; }
+  .prog-bar { height:4px; background:var(--surface2); border-radius:2px; overflow:hidden; }
+  .prog-fill { height:100%; background:#22c55e; border-radius:2px; transition:width 0.3s; }
+  .prog-label { font-size:11px; color:var(--text3); margin-top:5px; }
+
+  /* Exercises */
+  .sec-label { font-size:10.5px; font-weight:600; letter-spacing:0.08em; text-transform:uppercase; color:var(--text3); padding:12px 16px 4px; }
+  .ex-list { padding:0 16px 8px; }
+  .ex-row { display:flex; align-items:center; gap:8px; padding:8px 0; border-bottom:0.5px solid var(--border); }
+  .ex-row:last-child { border-bottom:none; }
+  .ex-check { width:22px; height:22px; border-radius:50%; border:1.5px solid var(--border-strong); flex-shrink:0; cursor:pointer; display:flex; align-items:center; justify-content:center; -webkit-tap-highlight-color:transparent; transition:background 0.12s,border-color 0.12s; }
+  .ex-check.done { background:#22c55e; border-color:#22c55e; }
+  .ex-check.done::after { content:''; width:5px; height:9px; border:2px solid white; border-top:none; border-left:none; transform:rotate(45deg) translateY(-1px); display:block; }
+  .ex-info { flex:1; min-width:0; }
+  .ex-name { font-size:14px; font-weight:500; }
+  .ex-name.done { text-decoration:line-through; color:var(--text3); }
+  .ex-alt { font-size:12px; color:var(--text3); margin-top:1px; }
+  .tag { font-size:10.5px; font-weight:600; padding:2px 7px; border-radius:20px; flex-shrink:0; }
+  .tag-c { background:var(--blue-bg); color:var(--blue-tx); border:0.5px solid var(--blue-br); }
+  .tag-i { background:var(--green-bg); color:var(--green-tx); border:0.5px solid var(--green-br); }
+  .tag-l { background:var(--amber-bg); color:var(--amber-tx); border:0.5px solid var(--amber-br); }
+  .tag-n { background:var(--purple-bg); color:var(--purple-tx); border:0.5px solid var(--purple-br); }
+
+  /* Tip */
+  .tip { margin:4px 16px 12px; padding:10px 12px; background:var(--surface2); border-radius:var(--radius-sm); font-size:12.5px; color:var(--text2); line-height:1.5; }
+
+  /* Flex pick */
+  .flex-pick { margin:0 16px 14px; padding:10px 12px; background:var(--surface2); border-radius:var(--radius-sm); }
+  .flex-pick-label { font-size:10.5px; font-weight:600; letter-spacing:0.07em; text-transform:uppercase; color:var(--text3); margin-bottom:8px; }
+  .flex-options { display:flex; flex-wrap:wrap; gap:6px; }
+  .flex-opt { padding:6px 11px; border-radius:20px; border:0.5px solid var(--border-strong); background:var(--surface); font-size:12.5px; color:var(--text2); cursor:pointer; -webkit-tap-highlight-color:transparent; font-family:inherit; transition:background 0.1s; }
+  .flex-opt.selected { background:var(--purple-bg); color:var(--purple-tx); border-color:var(--purple-br); font-weight:600; }
+
+
+
+
+  /* Notes */
+  .notes-wrap { padding:4px 16px 14px; }
+  .notes-label { font-size:10.5px; font-weight:600; letter-spacing:0.07em; text-transform:uppercase; color:var(--text3); margin-bottom:6px; }
+  .notes-input { width:100%; background:var(--surface2); border:0.5px solid var(--border-strong); border-radius:var(--radius-sm); padding:9px 11px; font-size:13.5px; color:var(--text); font-family:inherit; resize:none; min-height:60px; outline:none; }
+  .notes-input:focus { border-color:var(--accent); }
+  .notes-input::placeholder { color:var(--text3); }
+
+  /* Rest timer */
+  .timer-bar { position:fixed; bottom:0; left:0; right:0; background:var(--surface); border-top:0.5px solid var(--border); padding:10px 20px max(14px,env(safe-area-inset-bottom)); max-width:480px; margin:0 auto; z-index:20; display:flex; align-items:center; gap:12px; }
+  .t-disp { font-size:26px; font-weight:700; font-variant-numeric:tabular-nums; letter-spacing:-0.5px; min-width:78px; }
+  .t-disp.running { color:var(--accent); }
+  .t-col { display:flex; flex-direction:column; gap:5px; flex:1; }
+  .t-btns { display:flex; gap:7px; }
+  .t-btn { flex:1; padding:9px 0; border-radius:var(--radius-sm); border:none; font-size:13.5px; font-weight:600; cursor:pointer; font-family:inherit; -webkit-tap-highlight-color:transparent; }
+  .t-btn:active { opacity:0.7; }
+  .t-start { background:var(--accent); color:#fff; }
+  .t-reset { background:var(--surface2); color:var(--text2); border:0.5px solid var(--border-strong); }
+  .t-presets { display:flex; gap:5px; }
+  .t-pre { padding:5px 10px; border-radius:20px; border:0.5px solid var(--border-strong); background:var(--surface2); color:var(--text2); font-size:12px; font-weight:600; cursor:pointer; font-family:inherit; -webkit-tap-highlight-color:transparent; }
+  .t-pre:active { opacity:0.7; }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="header">
+    <div>
+      <h1>Workout</h1>
+      <div class="header-sub">Your weekly split</div>
+    </div>
+    <div class="seg" id="seg">
+      <button onclick="setMode(2)">2 sessions</button>
+      <button onclick="setMode(3)">+ finisher day</button>
+    </div>
+  </div>
+  <div class="content" id="content"></div>
+</div>
+
+<div class="timer-bar">
+  <div class="t-disp" id="tdisp">0:00</div>
+  <div class="t-col">
+    <div class="t-btns">
+      <button class="t-btn t-start" id="tbtn" onclick="timerToggle()">Start</button>
+      <button class="t-btn t-reset" onclick="timerReset()">Reset</button>
+    </div>
+    <div class="t-presets">
+      <button class="t-pre" onclick="timerSet(60)">1 min</button>
+      <button class="t-pre" onclick="timerSet(90)">90 s</button>
+      <button class="t-pre" onclick="timerSet(120)">2 min</button>
+      <button class="t-pre" onclick="timerSet(180)">3 min</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// All flex options available on day 3
+const ALL_FLEX = [
+  { name:'Leg raises', t:'l' },
+  { name:'Back raises', t:'l' },
+  { name:'Trap bar / cable pull', t:'i' },
+  { name:'Traps rope pull', t:'i' },
+  { name:'Deltoid cable curls', t:'i' },
+  { name:'Rotator cuff curl', t:'i' },
+  { name:'Cable crossover (high→low)', t:'i' },
+  { name:'Cable crossover (low→high)', t:'i' },
+  { name:'Hip thrust', t:'l' },
+  { name:'Hamstring curls', t:'l' },
+];
+
+const plans = {
+  2: [
+    {
+      id:'push', label:'Push day', color:'#378ADD', focus:'Chest · shoulders · triceps · legs', est:'75–90 min',
+      tip:'Lead with compounds while fresh. Hip thrust and leg press pair well after pressing work.',
+      sections:[
+        { name:'Compound', items:[
+          { name:'Bench press', alt:'or incline dumbbell press', t:'c' },
+          { name:'Overhead press', alt:'barbell or dumbbell', t:'c' },
+          { name:'Tricep dips', alt:'', t:'c' },
+        ]},
+        { name:'Isolation', items:[
+          { name:'Cable crossover (high to low)', alt:'', t:'i' },
+          { name:'Cable crossover (low to high)', alt:'', t:'i' },
+          { name:'Deltoid cable curls', alt:'or delt raises', t:'i' },
+          { name:'Rotator cuff curl', alt:'', t:'i' },
+        ]},
+        { name:'Legs', items:[
+          { name:'Hip thrust', alt:'', t:'l' },
+          { name:'Leg press', alt:'or quad curls', t:'l' },
+        ]},
+      ]
+    },
+    {
+      id:'pull', label:'Pull day', color:'#1D9E75', focus:'Deadlift · back · traps · hamstrings', est:'75–90 min',
+      tip:'Deadlifts first — they need the most from you. Traps and hamstrings finish the posterior chain.',
+      sections:[
+        { name:'Compound', items:[
+          { name:'Deadlift', alt:'', t:'c' },
+          { name:'Wide-grip pull-up', alt:'or narrow-grip', t:'c' },
+          { name:'Seated row', alt:'', t:'c' },
+        ]},
+        { name:'Isolation', items:[
+          { name:'Trap bar / one-hand cable pull', alt:'', t:'i' },
+          { name:'Traps rope pull', alt:'', t:'i' },
+        ]},
+        { name:'Legs', items:[
+          { name:'Hamstring curls', alt:'', t:'l' },
+        ]},
+      ]
+    }
+  ],
+  3: [
+    {
+      id:'push3', label:'Push day', color:'#378ADD', focus:'Chest · shoulders · triceps · legs', est:'75–90 min',
+      tip:'Lead with compounds while fresh. Hip thrust and leg press pair well after pressing work.',
+      sections:[
+        { name:'Compound', items:[
+          { name:'Bench press', alt:'or incline dumbbell press', t:'c' },
+          { name:'Overhead press', alt:'barbell or dumbbell', t:'c' },
+          { name:'Tricep dips', alt:'', t:'c' },
+        ]},
+        { name:'Isolation', items:[
+          { name:'Cable crossover (high to low)', alt:'', t:'i' },
+          { name:'Cable crossover (low to high)', alt:'', t:'i' },
+          { name:'Deltoid cable curls', alt:'or delt raises', t:'i' },
+          { name:'Rotator cuff curl', alt:'', t:'i' },
+        ]},
+        { name:'Legs', items:[
+          { name:'Hip thrust', alt:'', t:'l' },
+          { name:'Leg press', alt:'or quad curls', t:'l' },
+        ]},
+      ]
+    },
+    {
+      id:'pull3', label:'Pull day', color:'#1D9E75', focus:'Deadlift · back · traps · hamstrings', est:'75–90 min',
+      tip:'Deadlifts first — they need the most from you. Traps and hamstrings finish the posterior chain.',
+      sections:[
+        { name:'Compound', items:[
+          { name:'Deadlift', alt:'', t:'c' },
+          { name:'Wide-grip pull-up', alt:'or narrow-grip', t:'c' },
+          { name:'Seated row', alt:'', t:'c' },
+        ]},
+        { name:'Isolation', items:[
+          { name:'Trap bar / one-hand cable pull', alt:'', t:'i' },
+          { name:'Traps rope pull', alt:'', t:'i' },
+        ]},
+        { name:'Legs', items:[
+          { name:'Hamstring curls', alt:'', t:'l' },
+        ]},
+      ]
+    },
+    {
+      id:'finish', label:'Finisher day', color:'#7f77dd', focus:'Neck raises · your pick · assault bike', est:'45–75 min',
+      tip:'Neck raises are the anchor — they take what they take. Pick 1–2 extras, then finish on the bike.',
+      special:'finisher'
+    }
+  ]
+};
+
+let mode = 2;
+let checked = {};
+let notes = {};
+let expanded = {};
+let flexPicked = {};
+
+// ── helpers ──────────────────────────────────────────────────────────────────
+function ekey(sid, si, ei) { return sid+'_'+si+'_'+ei; }
+function fkey(sid, name) { return 'flex_'+sid+'_'+name; }
+
+function totalEx(session) {
+  if (session.special === 'finisher') {
+    // neck raises + however many flex items picked
+    return 1 + Object.keys(flexPicked).filter(k => k.startsWith('flex_finish_') && flexPicked[k]).length;
+  }
+  return session.sections.reduce((a,s) => a + s.items.length, 0);
+}
+function doneEx(session) {
+  if (session.special === 'finisher') {
+    let n = 0;
+    if (checked['finish_neck']) n++;
+    ALL_FLEX.forEach(f => { if (flexPicked[fkey('finish', f.name)] && checked['finish_flex_'+f.name]) n++; });
+    return n;
+  }
+  let n = 0;
+  session.sections.forEach((sec,si) => { sec.items.forEach((_,ei) => { if (checked[ekey(session.id,si,ei)]) n++; }); });
+  return n;
+}
+
+function tagClass(t) { return 'tag tag-'+t; }
+function tagLabel(t) { return {c:'Compound',i:'Isolation',l:'Legs',n:'Neck'}[t] || ''; }
+
+// ── render ────────────────────────────────────────────────────────────────────
+function render() {
+  const cont = document.getElementById('content');
+  cont.innerHTML = '';
+  plans[mode].forEach(session => {
+    const total = totalEx(session);
+    const done = doneEx(session);
+    const isOpen = expanded[session.id] !== false;
+    const pct = total ? Math.round(done/total*100) : 0;
+
+    const card = document.createElement('div');
+    card.className = 'session';
+
+    let html = `<div class="session-head" onclick="toggleSession('${session.id}')">
+      <div class="shl">
+        <div class="dot" style="background:${session.color}"></div>
+        <div>
+          <div class="s-title">${session.label}</div>
+          <div class="s-focus">${session.focus}</div>
+        </div>
+      </div>
+      <div class="shr">
+        <span class="est">${session.est}</span>
+        <span class="chev${isOpen?' open':''}">▾</span>
+      </div>
+    </div>`;
+
+    if (isOpen) {
+      html += `<div class="session-body">`;
+
+      // Progress
+      html += `<div class="prog-wrap">
+        <div class="prog-bar"><div class="prog-fill" style="width:${pct}%"></div></div>
+        <div class="prog-label">${done} of ${total} exercises done</div>
+      </div>`;
+
+      if (session.special === 'finisher') {
+        html += renderFinisher();
+      } else {
+        session.sections.forEach((sec,si) => {
+          html += `<div class="sec-label">${sec.name}</div><div class="ex-list">`;
+          sec.items.forEach((ex,ei) => {
+            const k = ekey(session.id,si,ei);
+            const isDone = !!checked[k];
+            html += `<div class="ex-row">
+              <div class="ex-check${isDone?' done':''}" onclick="toggleCheck('${session.id}',${si},${ei})"></div>
+              <div class="ex-info">
+                <div class="ex-name${isDone?' done':''}">${ex.name}</div>
+                ${ex.alt ? `<div class="ex-alt">${ex.alt}</div>` : ''}
+              </div>
+              <span class="${tagClass(ex.t)}">${tagLabel(ex.t)}</span>
+            </div>`;
+          });
+          html += `</div>`;
+        });
+      }
+
+      html += `<div class="tip">${session.tip}</div>`;
+
+      // Notes
+      const nv = (notes[session.id]||'').replace(/"/g,'&quot;');
+      html += `<div class="notes-wrap">
+        <div class="notes-label">Session notes</div>
+        <textarea class="notes-input" placeholder="Log weights, reps, or anything to remember…" oninput="saveNote('${session.id}',this.value)">${nv}</textarea>
+      </div>`;
+
+      html += `</div>`;
+    }
+
+    card.innerHTML = html;
+    cont.appendChild(card);
+  });
+}
+
+function renderFinisher() {
+  const neckDone = !!checked['finish_neck'];
+  let html = ``;
+
+  // Neck raises — fixed anchor
+  html += `<div class="sec-label">Anchor exercise</div><div class="ex-list">
+    <div class="ex-row">
+      <div class="ex-check${neckDone?' done':''}" onclick="toggleNeck()"></div>
+      <div class="ex-info">
+        <div class="ex-name${neckDone?' done':''}">Neck raises</div>
+        <div class="ex-alt">Up to 30 min — take your time</div>
+      </div>
+      <span class="tag tag-n">Neck</span>
+    </div>
+  </div>`;
+
+  // Flex pick
+  html += `<div class="sec-label">Pick your extras</div>
+  <div class="flex-pick">
+    <div class="flex-pick-label">Tap to add to today's session</div>
+    <div class="flex-options">`;
+  ALL_FLEX.forEach(f => {
+    const sel = !!flexPicked[fkey('finish',f.name)];
+    html += `<button class="flex-opt${sel?' selected':''}" onclick="toggleFlex('${f.name}')">${f.name}</button>`;
+  });
+  html += `</div></div>`;
+
+  // Render picked flex items as checkable
+  const picked = ALL_FLEX.filter(f => flexPicked[fkey('finish',f.name)]);
+  if (picked.length) {
+    html += `<div class="sec-label">Today's extras</div><div class="ex-list">`;
+    picked.forEach(f => {
+      const k = 'finish_flex_'+f.name;
+      const isDone = !!checked[k];
+      html += `<div class="ex-row">
+        <div class="ex-check${isDone?' done':''}" onclick="toggleFlexCheck('${f.name}')"></div>
+        <div class="ex-info"><div class="ex-name${isDone?' done':''}">${f.name}</div></div>
+        <span class="${tagClass(f.t)}">${tagLabel(f.t)}</span>
+      </div>`;
+    });
+    html += `</div>`;
+  }
+
+  // Assault bike
+  const bikeDone = !!checked['finish_bike'];
+  html += `<div class="sec-label">Cardio</div><div class="ex-list">
+    <div class="ex-row">
+      <div class="ex-check${bikeDone?' done':''}" onclick="toggleBike()"></div>
+      <div class="ex-info">
+        <div class="ex-name${bikeDone?' done':''}">Assault bike</div>
+        <div class="ex-alt">Sprint programme — 20 s work · 10 s rest · 8 rounds</div>
+      </div>
+      <span class="tag tag-l">Cardio</span>
+    </div>
+  </div>`;
+
+  return html;
+}
+
+function toggleBike() {
+  checked['finish_bike'] = !checked['finish_bike'];
+  save(); render();
+}
+
+// ── toggle helpers ────────────────────────────────────────────────────────────
+function toggleSession(id) {
+  expanded[id] = expanded[id] === false;
+  render();
+}
+function toggleCheck(sid, si, ei) {
+  const k = ekey(sid,si,ei);
+  checked[k] = !checked[k];
+  save(); render();
+}
+function toggleNeck() {
+  checked['finish_neck'] = !checked['finish_neck'];
+  save(); render();
+}
+function toggleFlex(name) {
+  const k = fkey('finish', name);
+  flexPicked[k] = !flexPicked[k];
+  if (!flexPicked[k]) { checked['finish_flex_'+name] = false; }
+  save(); render();
+}
+function toggleFlexCheck(name) {
+  const k = 'finish_flex_'+name;
+  checked[k] = !checked[k];
+  save(); render();
+}
+function saveNote(sid, val) { notes[sid] = val; save(); }
+function setMode(m) {
+  mode = m;
+  document.querySelectorAll('.seg button').forEach((b,i) => b.classList.toggle('active', (m===2&&i===0)||(m===3&&i===1)));
+  save(); render();
+}
+
+
+// ── rest timer ────────────────────────────────────────────────────────────────
+let tSecs=0, tTarget=0, tInterval=null, tRunning=false;
+function fmt(s) { const m=Math.floor(s/60),ss=s%60; return m+':'+String(ss).padStart(2,'0'); }
+function timerTick() {
+  tSecs++;
+  const disp = document.getElementById('tdisp');
+  if (!disp) return;
+  if (tTarget>0) {
+    const left = tTarget-tSecs;
+    disp.textContent = left>=0 ? fmt(left) : fmt(tSecs);
+    if (left===0 && navigator.vibrate) navigator.vibrate([200,100,200]);
+  } else {
+    disp.textContent = fmt(tSecs);
+  }
+}
+function timerToggle() {
+  if (tRunning) {
+    clearInterval(tInterval); tRunning=false;
+    document.getElementById('tbtn').textContent='Resume';
+    document.getElementById('tdisp').classList.remove('running');
+  } else {
+    tInterval=setInterval(timerTick,1000); tRunning=true;
+    document.getElementById('tbtn').textContent='Pause';
+    document.getElementById('tdisp').classList.add('running');
+  }
+}
+function timerReset() {
+  clearInterval(tInterval); tRunning=false; tSecs=0; tTarget=0;
+  document.getElementById('tdisp').textContent='0:00';
+  document.getElementById('tdisp').classList.remove('running');
+  document.getElementById('tbtn').textContent='Start';
+}
+function timerSet(s) { timerReset(); tTarget=s; document.getElementById('tdisp').textContent=fmt(s); }
+
+
+
+// ── persist ───────────────────────────────────────────────────────────────────
+function save() {
+  try { localStorage.setItem('wk2', JSON.stringify({mode,checked,notes,expanded,flexPicked})); } catch(e){}
+}
+function load() {
+  try {
+    const d=JSON.parse(localStorage.getItem('wk2')||'{}');
+    if (d.mode) mode=d.mode;
+    if (d.checked) checked=d.checked;
+    if (d.notes) notes=d.notes;
+    if (d.expanded) expanded=d.expanded;
+    if (d.flexPicked) flexPicked=d.flexPicked;
+  } catch(e){}
+}
+
+load();
+document.querySelectorAll('.seg button').forEach((b,i) => b.classList.toggle('active',(mode===2&&i===0)||(mode===3&&i===1)));
+render();
+</script>
+</body>
+</html>
