@@ -126,8 +126,10 @@
 // ── Exercise list (every day shows all of these) ─────────────────────────────
 const SECTIONS = [
   { name:'Compound', items:[
-    { id:'bench',     name:'Bench press',       alt:'or incline dumbbell press' },
-    { id:'ohp',       name:'Overhead press',    alt:'barbell or dumbbell' },
+    { id:'bench',     name:'Bench press' },
+    { id:'inclinedb', name:'Incline dumbbell press' },
+    { id:'ohp',       name:'Barbell overhead press' },
+    { id:'ohp-db',    name:'Dumbbell overhead press' },
     { id:'dips',      name:'Tricep dips' },
     { id:'deadlift',  name:'Deadlift' },
     { id:'pullups',   name:'Pull-ups' },
@@ -136,7 +138,8 @@ const SECTIONS = [
   { name:'Isolation', items:[
     { id:'xover-hl',  name:'Cable crossover (high to low)' },
     { id:'xover-lh',  name:'Cable crossover (low to high)' },
-    { id:'delt',      name:'Deltoid cable curls', alt:'or delt raises' },
+    { id:'delt',      name:'Deltoid cable curls' },
+    { id:'deltraise', name:'Delt raises' },
     { id:'rotator',   name:'Rotator cuff curl' },
     { id:'facepull',  name:'Face pulls' },
     { id:'trapbar',   name:'Trap bar' },
@@ -148,7 +151,8 @@ const SECTIONS = [
   ]},
   { name:'Legs', items:[
     { id:'hipthrust', name:'Hip thrust' },
-    { id:'legpress',  name:'Leg press',         alt:'or quad curls' },
+    { id:'legpress',  name:'Leg press' },
+    { id:'quadcurl',  name:'Quad curls' },
     { id:'calf',      name:'Calf press',        alt:'on the leg press machine' },
     { id:'abductor',  name:'Standing abductor' },
     { id:'hamstring', name:'Hamstring curls' },
