@@ -264,7 +264,7 @@ function renderWeek() {
   });
   h += `</tbody></table></div>`;
 
-  h += `<button class="clear-btn" onclick="clearWeek()">Clear this week</button>`;
+  h += `<button class="clear-btn" onclick="clearWeek()">Clear all</button>`;
   return h;
 }
 
@@ -274,13 +274,13 @@ function renderDay(day) {
   let h = `<div class="card">
     <div class="card-head"><div class="card-title">${DAYS_LONG[day]}</div><div class="card-sub">${date.getDate()} ${MONTHS[date.getMonth()]}</div></div>
     <div class="prog-wrap"><div class="prog-label">${n ? n + ' exercise' + (n===1?'':'s') + ' done' : 'Tap an exercise when you’ve done it'}</div>
-    <div class="legend">Faded = already done this week · tags show when you last did it (green = last 3 days)</div></div>`;
+    <div class="legend">Faded = already done since your last clear · tags show when you last did it (green = last 3 days)</div></div>`;
   SECTIONS.forEach(sec => {
     h += `<div class="sec-label">${sec.name}</div><div class="ex-list">`;
     sec.items.forEach(ex => {
       const d = isDone(day, ex.id);
       const l = lastDone(day, ex.id);
-      const earlier = !d && DAYS.some((_, i) => i !== day && isDone(i, ex.id));
+      const earlier = !d && doneInRound(ex.id, day);
       h += `<div class="ex-row${earlier ? ' earlier' : ''}" onclick="toggle(${day},'${ex.id}')">
         <div class="ex-check${d?' done':''}"></div>
         <div class="ex-info"><div class="ex-name${d?' done':''}">${ex.name}</div>${ex.alt ? `<div class="ex-alt">${ex.alt}</div>` : ''}</div>
@@ -295,6 +295,17 @@ function renderDay(day) {
   h += `<button class="clear-btn" onclick="clearDay(${day})">Clear ${DAYS_LONG[day]}</button>`;
   return h;
 }
+
+// Ticked on any other day since the last "Clear all" (carries across weeks)
+function doneInRound(id, day) {
+  const self = keyOf(addDays(weekStart, day)), from = data.resetAt || '';
+  return Object.entries(data.weeks).some(([mk, w]) => mk >= mondayKeyFloor(from) &&
+    Object.entries(w.checked || {}).some(([di, c]) => {
+      const k = keyOf(addDays(new Date(mk + 'T00:00'), +di));
+      return c && c[id] && k !== self && k >= from;
+    }));
+}
+function mondayKeyFloor(k) { return k ? keyOf(mondayOf(new Date(k + 'T00:00'))) : ''; }
 
 // Most recent day before this day (this week or earlier weeks) the exercise was ticked
 function lastDone(day, id) {
@@ -339,8 +350,9 @@ function clearDay(day) {
   save(); render();
 }
 function clearWeek() {
-  if (!confirm('Clear all ticks and notes for this whole week?')) return;
-  delete data.weeks[keyOf(weekStart)];
+  if (!confirm('Clear all completed exercises and start a fresh round?')) return;
+  delete data.weeks[keyOf(thisMonday())];
+  data.resetAt = keyOf(thisMonday());
   save(); render();
 }
 
